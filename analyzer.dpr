@@ -3,7 +3,8 @@ program analyzer;
 uses
   Forms,
   main in 'main.pas' {FormMain},
-  ExcelAnalyzer in 'ExcelAnalyzer.pas';
+  ExcelAnalyzer in 'ExcelAnalyzer.pas',
+  LogError in 'LogError.pas';
 
 {$R *.res}
 

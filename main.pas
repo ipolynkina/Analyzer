@@ -20,7 +20,7 @@ type
 
     btn_add_files: TButton;
     btn_run_analyze: TButton;
-    
+
     dlg_add_files: TOpenDialog;
 
     procedure btn_add_filesClick(Sender: TObject);
@@ -50,9 +50,7 @@ begin
   dlg_add_files.Options := [ofAllowMultiSelect];
   if dlg_add_files.Execute then begin
     for index := 0 to dlg_add_files.Files.Count - 1 do begin
-      mmo_list_files.Text := mmo_list_files.Text
-                          + ExtractFileName(dlg_add_files.Files[index])
-                          + #13#10;
+      mmo_list_files.Text := mmo_list_files.Text + ExtractFileName(dlg_add_files.Files[index]) + #13#10;
     end;
     btn_run_analyze.Enabled := True;
   end;
@@ -61,10 +59,17 @@ end;
 procedure TFormMain.btn_run_analyzeClick(Sender: TObject);
 var
   index : Integer;
+  analyzer : Analyzer_for_TS_files;
 begin
+  btn_add_files.Enabled := False;
+  btn_run_analyze.Enabled := False;
+
+  analyzer := Analyzer_for_TS_files.Create();
   for index := 0 to dlg_add_files.Files.Count - 1 do begin
-    // TODO
+    analyzer.analyze_file(dlg_add_files.Files[index]);
   end;
+
+  btn_add_files.Enabled := True;
 end;
 
 end.

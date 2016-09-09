@@ -1,6 +1,6 @@
 object FormMain: TFormMain
-  Left = 263
-  Top = 137
+  Left = 464
+  Top = 122
   Width = 900
   Height = 539
   Caption = 'analyzer (version 1.0.0)'
