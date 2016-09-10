@@ -69,6 +69,13 @@ begin
     analyzer.analyze_file(dlg_add_files.Files[index]);
   end;
 
+  if (analyzer.get_error_text() = '') then begin
+    mmo_error_text.Text := 'OK!';
+  end
+  else begin
+    mmo_error_text.Text := analyzer.get_error_text();
+  end;
+
   btn_add_files.Enabled := True;
 end;
 

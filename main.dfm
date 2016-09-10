@@ -43,6 +43,12 @@ object FormMain: TFormMain
       Width = 436
       Height = 376
       Align = alClient
+      Font.Charset = RUSSIAN_CHARSET
+      Font.Color = clBlue
+      Font.Height = -16
+      Font.Name = 'Times New Roman'
+      Font.Style = []
+      ParentFont = False
       ReadOnly = True
       TabOrder = 1
     end
@@ -88,6 +94,12 @@ object FormMain: TFormMain
       Width = 444
       Height = 401
       Align = alClient
+      Font.Charset = RUSSIAN_CHARSET
+      Font.Color = clBlue
+      Font.Height = -16
+      Font.Name = 'Times New Roman'
+      Font.Style = []
+      ParentFont = False
       ReadOnly = True
       TabOrder = 1
     end
