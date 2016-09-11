@@ -2,14 +2,14 @@ unit ExcelAnalyzer;
 
 interface
 
-uses ComObj, LogError, SysUtils, DateUtils,
-Dialogs;
+uses ComObj, LogError, SysUtils, DateUtils;
 
-const ID_FIRST_ROW_WITH_DATA = 2;
+const
+  ID_FIRST_ROW_WITH_DATA = 2;
 
 type
-  file_structure = (id_date = 1, id_koeff, id_parameter_1, id_parameter_2
-                    );
+  file_structure = (id_date = 1, id_koeff, id_parameter_1, id_parameter_2, id_type, id_nomenclature,
+                    id_min_value, id_max_value, id_default_value, id_activation);
 
 type
   Analyzer_for_TS_files = class
@@ -25,6 +25,10 @@ type
       procedure analyze_koeff();
       procedure analyze_parameter_1();
       procedure analyze_parameter_2();
+      procedure analyze_type();
+      procedure analyze_nomenclature();
+      procedure analyze_values();
+      procedure analyze_activation();
 
     public
       constructor Create();
@@ -52,6 +56,10 @@ begin
   analyze_koeff();
   analyze_parameter_1();
   analyze_parameter_2();
+  analyze_type();
+  analyze_nomenclature();
+  analyze_values();
+  analyze_activation();
   // TODO
 end;
 
@@ -121,16 +129,93 @@ begin
     end;
   end;
 end;
-
+   
 procedure Analyzer_for_TS_files.analyze_parameter_2();
+const
+  LENGTH_OF_EMPLOYEE_NUMBER = 8;
 var
   index_row, user_parameter : Integer;
 begin
   for index_row := ID_FIRST_ROW_WITH_DATA to last_row do begin
     if (String(excel.Cells[index_row, ord(id_parameter_2)]) = '') then Continue;
     if not (TryStrToInt(excel.Cells[index_row, ord(id_parameter_2)], user_parameter)) or
-           (Length(String(excel.Cells[index_row, ord(id_parameter_2)])) <> 8) then begin
+           (Length(String(excel.Cells[index_row, ord(id_parameter_2)])) <> LENGTH_OF_EMPLOYEE_NUMBER) then begin
       log_error.record_error(filename, ord(id_parameter_2));
+      Break;
+    end;
+  end;
+end;
+
+procedure Analyzer_for_TS_files.analyze_type();
+const
+  MIN_ID_TYPE = 0;
+  MAX_ID_TYPE = 5;
+var
+  index_row, user_value : Integer;
+begin
+  for index_row := ID_FIRST_ROW_WITH_DATA to last_row do begin
+    if not (TryStrToInt(excel.Cells[index_row, ord(id_type)], user_value) or
+        (user_value < MIN_ID_TYPE) or (user_value > MAX_ID_TYPE)) then begin
+      log_error.record_error(filename, ord(id_type));
+      Break;
+    end;
+  end;
+end;
+
+procedure Analyzer_for_TS_files.analyze_nomenclature();
+var
+  index_row : Integer;
+  user_input : String;
+begin
+  for index_row := ID_FIRST_ROW_WITH_DATA to last_row do begin
+    user_input := String(excel.Cells[index_row, ord(id_nomenclature)]);
+    if (user_input = '') then Continue;
+    if (user_input = 'BF_INST_AGENT_NOTCAL') or (user_input = 'BF_ACC_ACTION_BAG') or
+        (user_input = 'BF_INST_ACTION_NN') or (user_input = 'ACC_ON_CASH_ZONE  ') then begin
+      log_error.record_error(filename, ord(id_nomenclature));
+      Break;
+    end;
+  end;
+end;
+
+procedure Analyzer_for_TS_files.analyze_values();
+var
+  index_row, index_incorrect_row : Integer;
+  min_value_of_user, max_value_of_user, default_value_of_user : Double;
+begin
+  index_incorrect_row := -1;
+
+  for index_row := ID_FIRST_ROW_WITH_DATA to last_row do begin
+    if not (TryStrToFloat(excel.Cells[index_row, ord(id_min_value)], min_value_of_user)) then
+      index_incorrect_row := ord(id_min_value)
+    else if not (TryStrToFloat(excel.Cells[index_row, ord(id_max_value)], max_value_of_user)) then
+      index_incorrect_row := ord(id_max_value)
+    else if not (TryStrToFloat(excel.Cells[index_row, ord(id_default_value)], default_value_of_user)) then
+      index_incorrect_row := ord(id_default_value);
+
+    if (min_value_of_user <> max_value_of_user) or (max_value_of_user <> default_value_of_user) then begin
+      if (min_value_of_user = max_value_of_user) then index_incorrect_row := ord(id_default_value)
+      else if (max_value_of_user = default_value_of_user) then index_incorrect_row := ord(id_min_value)
+      else index_incorrect_row := ord(id_max_value);
+    end;
+
+    if (index_incorrect_row <> -1) then begin
+      log_error.record_error(filename, index_incorrect_row);
+      Break;
+    end;
+  end;
+end;
+
+procedure Analyzer_for_TS_files.analyze_activation();
+const
+  ACTIVATION_SIGN = 1;
+var
+  index_row, user_value : Integer;
+begin
+  for index_row := ID_FIRST_ROW_WITH_DATA to last_row do begin
+    if not (TryStrToInt(String(excel.Cells[index_row, ord(id_activation)]), user_value)) or
+       (user_value <> ACTIVATION_SIGN) then begin
+      log_error.record_error(filename, ord(id_activation));
       Break;
     end;
   end;
