@@ -2,14 +2,13 @@ unit ExcelAnalyzer;
 
 interface
 
-uses ComObj, LogError, SysUtils, DateUtils;
+uses ComObj, LogError, SysUtils, DateUtils, RegExpr;
 
-const
-  ID_FIRST_ROW_WITH_DATA = 2;
+const ID_FIRST_ROW_WITH_DATA = 2;
 
 type
   file_structure = (id_date = 1, id_koeff, id_parameter_1, id_parameter_2, id_type, id_nomenclature,
-                    id_min_value, id_max_value, id_default_value, id_activation);
+                    id_min_value, id_max_value, id_default_value, id_activation, id_number_shop);
 
 type
   Analyzer_for_TS_files = class
@@ -29,11 +28,13 @@ type
       procedure analyze_nomenclature();
       procedure analyze_values();
       procedure analyze_activation();
+      procedure analyze_numbering_shops();
 
     public
       constructor Create();
       procedure analyze_file(filename : String);
       function get_error_text() : String;
+      function check_was_successful() : Boolean;
       destructor Destroy(); override;
 
   end;
@@ -60,7 +61,7 @@ begin
   analyze_nomenclature();
   analyze_values();
   analyze_activation();
-  // TODO
+  analyze_numbering_shops();
 end;
 
 function Analyzer_for_TS_files.get_error_text() : String;
@@ -68,10 +69,15 @@ begin
   Result := log_error.get_error_text();
 end;
 
+function Analyzer_for_TS_files.check_was_successful() : Boolean;
+begin
+  Result := log_error.check_was_successful();
+end;
+
 destructor Analyzer_for_TS_files.Destroy();
 begin
   excel.Application.Quit;
-  log_error.Free;
+  log_error.Free();
 end;
 
 // ***************************** private ************************************ //
@@ -131,19 +137,24 @@ begin
 end;
    
 procedure Analyzer_for_TS_files.analyze_parameter_2();
-const
-  LENGTH_OF_EMPLOYEE_NUMBER = 8;
 var
-  index_row, user_parameter : Integer;
+  index_row: Integer;
+  user_input : String;
+  reg_expr : TRegExpr;
 begin
+  reg_expr := TRegExpr.Create();
   for index_row := ID_FIRST_ROW_WITH_DATA to last_row do begin
-    if (String(excel.Cells[index_row, ord(id_parameter_2)]) = '') then Continue;
-    if not (TryStrToInt(excel.Cells[index_row, ord(id_parameter_2)], user_parameter)) or
-           (Length(String(excel.Cells[index_row, ord(id_parameter_2)])) <> LENGTH_OF_EMPLOYEE_NUMBER) then begin
+    user_input := String(excel.Cells[index_row, ord(id_parameter_2)]);
+    if (user_input = '') then Continue;
+
+    reg_expr.InputString := user_input;
+    reg_expr.Expression := '[0-9/]';
+    if not (reg_expr.Exec()) then begin
       log_error.record_error(filename, ord(id_parameter_2));
       Break;
     end;
   end;
+  reg_expr.Free();
 end;
 
 procedure Analyzer_for_TS_files.analyze_type();
@@ -219,6 +230,35 @@ begin
       Break;
     end;
   end;
+end;
+
+procedure Analyzer_for_TS_files.analyze_numbering_shops();
+var
+  index_row : Integer;
+  user_input : String;
+  reg_expr_one_shop,  reg_expr_multi_shops: TRegExpr;
+begin
+  reg_expr_one_shop := TRegExpr.Create();
+  reg_expr_multi_shops := TRegExpr.Create();
+
+  for index_row := ID_FIRST_ROW_WITH_DATA to last_row do begin
+    user_input := String(excel.Cells[index_row, id_number_shop]);
+    if not (user_input = '') then begin
+      reg_expr_one_shop.InputString := user_input;
+      reg_expr_multi_shops.InputString := user_input + ',';
+
+      reg_expr_one_shop.Expression := '^([A-B]{1}[0-9]{3})$';
+      reg_expr_multi_shops.Expression := '^('#39'{1}[A-B]{1}[0-9]{3}'#039'{1}[,]{1}){1,}$';
+
+      if not (reg_expr_one_shop.Exec()) and not (reg_expr_multi_shops.Exec()) then begin
+        log_error.record_error(filename, ord(id_number_shop));
+        Break;
+      end;
+    end;
+  end;
+
+  reg_expr_one_shop.Free();
+  reg_expr_multi_shops.Free();
 end;
 
 end.
