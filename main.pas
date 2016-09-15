@@ -22,19 +22,19 @@ type
     btn_run_analyze: TButton;
 
     dlg_add_files: TOpenDialog;
-    
+
     g_progress_analyze: TGauge;
     
     il_pictures: TImageList;
     img_smile: TImage;
     pm_main_form: TPopupMenu;
-    N1: TMenuItem;
+    Exit: TMenuItem;
 
     procedure btn_add_filesClick(Sender: TObject);
     procedure btn_run_analyzeClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
-    procedure N1Click(Sender: TObject);
+    procedure ExitClick(Sender: TObject);
 
   private
     { Private declarations }
@@ -49,15 +49,23 @@ implementation
 
 {$R *.dfm}
 
+procedure TFormMain.FormCreate(Sender: TObject);
+begin
+  FormMain.il_pictures.GetBitmap(0, img_smile.Picture.Bitmap);
+  mmo_error_text.Text := 'Hello!';
+  btn_run_analyze.Enabled := False;
+end;
+
 procedure TFormMain.btn_add_filesClick(Sender: TObject);
 var
   index : Integer;
 begin
   mmo_list_files.Text := '';
   mmo_error_text.Text := '';
-  
+
   dlg_add_files := TOpenDialog.Create(Self);
   dlg_add_files.Options := [ofAllowMultiSelect];
+  dlg_add_files.Filter := 'Excel|*.xls';
   if dlg_add_files.Execute then begin
     for index := 0 to dlg_add_files.Files.Count - 1 do begin
       mmo_list_files.Text := mmo_list_files.Text + ExtractFileName(dlg_add_files.Files[index]) + #13#10;
@@ -70,16 +78,28 @@ procedure TFormMain.btn_run_analyzeClick(Sender: TObject);
 var
   index : Integer;
   analyzer : Analyzer_for_TS_files;
+  //
+  start_time, end_time : TTime;
 begin
   btn_add_files.Enabled := False;
   btn_run_analyze.Enabled := False;
   g_progress_analyze.Progress := 0;
 
   analyzer := Analyzer_for_TS_files.Create();
+  start_time := Now;
   for index := 0 to dlg_add_files.Files.Count - 1 do begin
-    analyzer.analyze_file(dlg_add_files.Files[index]);
+    try
+      analyzer.analyze_file(dlg_add_files.Files[index]);
+    except
+      on error_report : Exception do begin
+        ShowMessage('Error: ' + error_report.Message + '. Sorry');
+        Close();
+      end;
+    end;
     g_progress_analyze.Progress := 100 * (index + 1) div dlg_add_files.Files.Count;
   end;
+  end_time := Now;
+  ShowMessage(TimeToStr(end_time - start_time));
   mmo_error_text.Text := analyzer.get_error_text();
 
   img_smile.Picture.Bitmap := nil;
@@ -90,21 +110,14 @@ begin
   btn_add_files.Enabled := True;
 end;
 
-procedure TFormMain.FormCreate(Sender: TObject);
+procedure TFormMain.ExitClick(Sender: TObject);
 begin
-  FormMain.il_pictures.GetBitmap(0, img_smile.Picture.Bitmap);
-  mmo_error_text.Text := 'Hello!';
-  btn_run_analyze.Enabled := False;
+  Close();
 end;
 
 procedure TFormMain.FormDestroy(Sender: TObject);
 begin
   dlg_add_files.Free();
-end;
-
-procedure TFormMain.N1Click(Sender: TObject);
-begin
-  Close();
 end;
 
 end.

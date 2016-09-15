@@ -20,6 +20,7 @@ type
       log_error : Logger;
 
       procedure initialization_file(filename : String);
+      function file_structure_is_correct() : Boolean;
       procedure analyze_date();
       procedure analyze_koeff();
       procedure analyze_parameter_1();
@@ -53,15 +54,20 @@ end;
 procedure Analyzer_for_TS_files.analyze_file(filename : String);
 begin
   initialization_file(filename);
-  analyze_date();
-  analyze_koeff();
-  analyze_parameter_1();
-  analyze_parameter_2();
-  analyze_type();
-  analyze_nomenclature();
-  analyze_values();
-  analyze_activation();
-  analyze_numbering_shops();
+  if file_structure_is_correct() then begin
+    analyze_date();
+    analyze_koeff();
+    analyze_parameter_1();
+    analyze_parameter_2();
+    analyze_type();
+    analyze_nomenclature();
+    analyze_values();
+    analyze_activation();
+    analyze_numbering_shops();
+  end
+  else begin
+    log_error.record_error(filename, last_column);
+  end;
 end;
 
 function Analyzer_for_TS_files.get_error_text() : String;
@@ -87,12 +93,18 @@ begin
   excel.Workbooks.Open(filename, 0, True);
   Self.filename := ExtractFileName(filename);
   last_row := excel.ActiveSheet.UsedRange.Rows.Count;
-  //last_column := excel.ActivateSheet.UsedRange.Columns.Count;
+  last_column := excel.ActiveSheet.UsedRange.Columns.Count;
+end;
+
+function Analyzer_for_TS_files.file_structure_is_correct() : Boolean;
+const MAX_INDEX_COLUMN = 13;
+begin
+  if last_column <= MAX_INDEX_COLUMN then Result := True
+  else Result := False;
 end;
 
 procedure Analyzer_for_TS_files.analyze_date();
-const
-  MAX_DAY_IN_MONTH = 31;
+const MAX_DAY_IN_MONTH = 31;
 var
   index_row : Integer;
   user_input : String;
@@ -112,10 +124,12 @@ end;
 procedure Analyzer_for_TS_files.analyze_koeff();
 var
   index_row : Integer;
+  user_input : String;
 begin
   if (last_row - 1 > ID_FIRST_ROW_WITH_DATA) then begin
+    user_input := String(excel.Cells[ID_FIRST_ROW_WITH_DATA, ord(id_koeff)]);
     for index_row := ID_FIRST_ROW_WITH_DATA + 1 to last_row do begin
-      if (String(excel.Cells[index_row, ord(id_koeff)]) <> String(excel.Cells[index_row - 1, ord(id_koeff)])) then begin
+      if (String(excel.Cells[index_row, ord(id_koeff)]) <> user_input) then begin
         log_error.record_error(filename, ord(id_koeff));
         Break;
       end;
@@ -126,10 +140,12 @@ end;
 procedure Analyzer_for_TS_files.analyze_parameter_1();
 var
   index_row, user_parameter : Integer;
+  user_input : String;
 begin
   for index_row := ID_FIRST_ROW_WITH_DATA to last_row do begin
-    if (String(excel.Cells[index_row, ord(id_parameter_1)]) = '') then Continue;
-    if not (TryStrToInt(excel.Cells[index_row, ord(id_parameter_1)], user_parameter)) then begin
+    user_input := String(excel.Cells[index_row, ord(id_parameter_1)]);
+    if (user_input = '') then Continue;
+    if not (TryStrToInt(user_input, user_parameter)) then begin
       log_error.record_error(filename, ord(id_parameter_1));
       Break;
     end;
@@ -158,9 +174,8 @@ begin
 end;
 
 procedure Analyzer_for_TS_files.analyze_type();
-const
-  MIN_ID_TYPE = 0;
-  MAX_ID_TYPE = 5;
+const MIN_ID_TYPE = 0;
+const MAX_ID_TYPE = 5;
 var
   index_row, user_value : Integer;
 begin
@@ -218,8 +233,7 @@ begin
 end;
 
 procedure Analyzer_for_TS_files.analyze_activation();
-const
-  ACTIVATION_SIGN = 1;
+const ACTIVATION_SIGN = 1;
 var
   index_row, user_value : Integer;
 begin

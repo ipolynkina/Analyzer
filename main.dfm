@@ -4,7 +4,7 @@ object FormMain: TFormMain
   Width = 900
   Height = 574
   Align = alCustom
-  Caption = 'analyzer (version 1.0.0)'
+  Caption = 'Analyzer (version 1.0.0)'
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -54,6 +54,7 @@ object FormMain: TFormMain
       Width = 436
       Height = 152
       Align = alTop
+      BevelInner = bvLowered
       TabOrder = 0
       object img_smile: TImage
         Left = 144
@@ -94,6 +95,7 @@ object FormMain: TFormMain
       Width = 444
       Height = 64
       Align = alTop
+      BevelInner = bvLowered
       TabOrder = 0
       object btn_add_files: TButton
         Left = 72
@@ -133,6 +135,7 @@ object FormMain: TFormMain
     end
   end
   object dlg_add_files: TOpenDialog
+    Filter = #1060#1072#1081#1083#1099' Excel|*.xls'
     Left = 471
     Top = 25
   end
@@ -142,7 +145,7 @@ object FormMain: TFormMain
     Left = 519
     Top = 25
     Bitmap = {
-      494C010103000500040080008000FFFFFFFFFF00FFFFFFFFFFFFFFFF424D3600
+      494C010103000500040080008000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000000200000001000001002000000000000000
       0800000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
@@ -17042,14 +17045,15 @@ object FormMain: TFormMain
       FFFFFFFFFFFFFFFFFFF3FC0FFFFFFFFFFFFFFFFF3FF202113E21FF9FFFFFFFFF
       FFFFFFFFFFFFFFFFFFF3FC0FFFFFFFFFFFFFFFFFFFFFFFD1E3FFFFFFFFFFFFFF
       FFFFFFFFFFFFFFFFFFF3FF47FFFFFFFFFFFFFFFF0C0002263F807FFFFFFFFFFF
-      FFFFFFFFFFFFFFFFFFF3FF47FFFFFFFF}
+      FFFFFFFFFFFFFFFFFFF3FF47FFFFFFFF00000000000000000000000000000000
+      000000000000}
   end
   object pm_main_form: TPopupMenu
     Left = 471
     Top = 89
-    object N1: TMenuItem
+    object Exit: TMenuItem
       Caption = #1042#1099#1093#1086#1076
-      OnClick = N1Click
+      OnClick = ExitClick
     end
   end
 end

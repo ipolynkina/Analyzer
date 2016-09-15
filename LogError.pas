@@ -9,7 +9,7 @@ type
 
     private
       error_text: String;
-      file_has_error : Boolean;
+      file_is_correct : Boolean;
 
     public
       constructor Create();
@@ -24,7 +24,7 @@ implementation
 constructor Logger.Create();
 begin
   error_text := '';
-  file_has_error := False;
+  file_is_correct := True;
 end;
 
 procedure Logger.record_error(filename: String; id_column: Integer);
@@ -41,22 +41,22 @@ begin;
     7, 8, 9: curr_error := ': different values ';
     10: curr_error := ': values are not activated ';
     11: curr_error := ': incorrect number shop ';
+    else curr_error := ': incorrect file structure ';
   end;
 
   error_text := error_text + filename + curr_error + '(see column ' + IntToStr(id_column) + ')' + #13#10;
-  file_has_error := True;
+  file_is_correct := False;
 end;
 
 function Logger.get_error_text() : String;
 begin
-  if (error_text = '') then Result := 'OK'
+  if (file_is_correct) then Result := 'OK'
   else Result := error_text;
 end;
 
 function Logger.check_was_successful() : Boolean;
 begin
-  if file_has_error then Result := False
-  else Result := True;
+  Result := file_is_correct;
 end;
 
 end.
