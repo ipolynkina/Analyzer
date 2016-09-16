@@ -15,7 +15,7 @@ type
       constructor Create();
       procedure record_error(filename: String; id_column: Integer);
       function get_error_text() : String;
-      function check_was_successful() : Boolean;
+      function check_is_successful() : Boolean;
 
   end;
 
@@ -50,11 +50,11 @@ end;
 
 function Logger.get_error_text() : String;
 begin
-  if (file_is_correct) then Result := 'OK'
+  if file_is_correct then Result := 'OK'
   else Result := error_text;
 end;
 
-function Logger.check_was_successful() : Boolean;
+function Logger.check_is_successful() : Boolean;
 begin
   Result := file_is_correct;
 end;

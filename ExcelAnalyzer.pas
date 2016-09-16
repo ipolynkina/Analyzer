@@ -1,22 +1,21 @@
-unit ExcelAnalyzer;
+unit ExcelAnalyzer;    
 
 interface
 
 uses ComObj, LogError, SysUtils, DateUtils, RegExpr;
 
-const ID_FIRST_ROW_WITH_DATA = 2;
+const FIRST_LINE_OF_DATA = 2;
+
+type file_structure = (id_date = 1, id_koeff, id_parameter_1, id_parameter_2, id_type, id_nomenclature,
+                       id_min_value, id_max_value, id_default_value, id_activation, id_number_shop);
 
 type
-  file_structure = (id_date = 1, id_koeff, id_parameter_1, id_parameter_2, id_type, id_nomenclature,
-                    id_min_value, id_max_value, id_default_value, id_activation, id_number_shop);
-
-type
-  Analyzer_for_TS_files = class
+  TSAnalyzer = class
 
     private
       filename : String;
       excel : Variant;
-      last_row, last_column : Integer;
+      last_row : Integer;
       log_error : Logger;
 
       procedure initialization_file(filename : String);
@@ -35,7 +34,7 @@ type
       constructor Create();
       procedure analyze_file(filename : String);
       function get_error_text() : String;
-      function check_was_successful() : Boolean;
+      function check_is_successful() : Boolean;
       destructor Destroy(); override;
 
   end;
@@ -44,14 +43,14 @@ implementation
 
 // ***************************** public ************************************* //
 
-constructor Analyzer_for_TS_files.Create();
+constructor TSAnalyzer.Create();
 begin
   excel := CreateOleObject('Excel.Application');
   log_error := Logger.Create();
 end;
 
 // facade
-procedure Analyzer_for_TS_files.analyze_file(filename : String);
+procedure TSAnalyzer.analyze_file(filename : String);
 begin
   initialization_file(filename);
   if file_structure_is_correct() then begin
@@ -64,23 +63,20 @@ begin
     analyze_values();
     analyze_activation();
     analyze_numbering_shops();
-  end
-  else begin
-    log_error.record_error(filename, last_column);
   end;
 end;
 
-function Analyzer_for_TS_files.get_error_text() : String;
+function TSAnalyzer.get_error_text() : String;
 begin
   Result := log_error.get_error_text();
 end;
 
-function Analyzer_for_TS_files.check_was_successful() : Boolean;
+function TSAnalyzer.check_is_successful() : Boolean;
 begin
-  Result := log_error.check_was_successful();
+  Result := log_error.check_is_successful();
 end;
 
-destructor Analyzer_for_TS_files.Destroy();
+destructor TSAnalyzer.Destroy();
 begin
   excel.Application.Quit;
   log_error.Free();
@@ -88,47 +84,51 @@ end;
 
 // ***************************** private ************************************ //
 
-procedure Analyzer_for_TS_files.initialization_file(filename : String);
+procedure TSAnalyzer.initialization_file(filename : String);
 begin
   excel.Workbooks.Open(filename, 0, True);
   Self.filename := ExtractFileName(filename);
   last_row := excel.ActiveSheet.UsedRange.Rows.Count;
-  last_column := excel.ActiveSheet.UsedRange.Columns.Count;
 end;
 
-function Analyzer_for_TS_files.file_structure_is_correct() : Boolean;
+function TSAnalyzer.file_structure_is_correct() : Boolean;
 const MAX_INDEX_COLUMN = 13;
+var last_column : Integer;
 begin
-  if last_column <= MAX_INDEX_COLUMN then Result := True
-  else Result := False;
+  last_column := excel.ActiveSheet.UsedRange.Columns.Count;
+  if last_column <= MAX_INDEX_COLUMN then begin
+    Result := True;
+  end
+  else begin
+    Result := False;
+    log_error.record_error(filename, last_column);
+  end;
 end;
-
-procedure Analyzer_for_TS_files.analyze_date();
+        
+procedure TSAnalyzer.analyze_date();
 const MAX_DAY_IN_MONTH = 31;
 var
-  index_row : Integer;
-  user_input : String;
-  user_date, today : TDateTime;
+  index_row, days_in_year_today : Integer;
+  user_date : TDateTime;
 begin
-  today := Now;
-  for index_row := ID_FIRST_ROW_WITH_DATA to last_row do begin
-    user_input := excel.Cells[index_row, ord(id_date)];
-    if not (TryStrToDate(user_input, user_date)) or
-           (Abs(DayOfTheYear(today) - DayOfTheYear(StrToDateTime(user_input))) > MAX_DAY_IN_MONTH) then begin
+  days_in_year_today := DayOfTheYear(Now);
+  for index_row := FIRST_LINE_OF_DATA to last_row do begin
+    if not (TryStrToDate(String(excel.Cells[index_row, ord(id_date)]), user_date)) or
+           (Abs(days_in_year_today - DayOfTheYear(user_date)) > MAX_DAY_IN_MONTH) then begin
       log_error.record_error(filename, ord(id_date));
       Break;
     end;
   end;
 end;
 
-procedure Analyzer_for_TS_files.analyze_koeff();
+procedure TSAnalyzer.analyze_koeff();
 var
   index_row : Integer;
   user_input : String;
 begin
-  if (last_row - 1 > ID_FIRST_ROW_WITH_DATA) then begin
-    user_input := String(excel.Cells[ID_FIRST_ROW_WITH_DATA, ord(id_koeff)]);
-    for index_row := ID_FIRST_ROW_WITH_DATA + 1 to last_row do begin
+  if (last_row - 1 > FIRST_LINE_OF_DATA) then begin
+    user_input := String(excel.Cells[FIRST_LINE_OF_DATA, ord(id_koeff)]);
+    for index_row := FIRST_LINE_OF_DATA + 1 to last_row do begin
       if (String(excel.Cells[index_row, ord(id_koeff)]) <> user_input) then begin
         log_error.record_error(filename, ord(id_koeff));
         Break;
@@ -137,12 +137,12 @@ begin
   end;
 end;
 
-procedure Analyzer_for_TS_files.analyze_parameter_1();
+procedure TSAnalyzer.analyze_parameter_1();
 var
   index_row, user_parameter : Integer;
   user_input : String;
 begin
-  for index_row := ID_FIRST_ROW_WITH_DATA to last_row do begin
+  for index_row := FIRST_LINE_OF_DATA to last_row do begin
     user_input := String(excel.Cells[index_row, ord(id_parameter_1)]);
     if (user_input = '') then Continue;
     if not (TryStrToInt(user_input, user_parameter)) then begin
@@ -152,17 +152,17 @@ begin
   end;
 end;
    
-procedure Analyzer_for_TS_files.analyze_parameter_2();
+procedure TSAnalyzer.analyze_parameter_2();
 var
   index_row: Integer;
   user_input : String;
   reg_expr : TRegExpr;
 begin
   reg_expr := TRegExpr.Create();
-  for index_row := ID_FIRST_ROW_WITH_DATA to last_row do begin
+
+  for index_row := FIRST_LINE_OF_DATA to last_row do begin
     user_input := String(excel.Cells[index_row, ord(id_parameter_2)]);
     if (user_input = '') then Continue;
-
     reg_expr.InputString := user_input;
     reg_expr.Expression := '[0-9/]';
     if not (reg_expr.Exec()) then begin
@@ -170,16 +170,17 @@ begin
       Break;
     end;
   end;
+
   reg_expr.Free();
 end;
 
-procedure Analyzer_for_TS_files.analyze_type();
+procedure TSAnalyzer.analyze_type();
 const MIN_ID_TYPE = 0;
 const MAX_ID_TYPE = 5;
 var
   index_row, user_value : Integer;
 begin
-  for index_row := ID_FIRST_ROW_WITH_DATA to last_row do begin
+  for index_row := FIRST_LINE_OF_DATA to last_row do begin
     if not (TryStrToInt(excel.Cells[index_row, ord(id_type)], user_value) or
         (user_value < MIN_ID_TYPE) or (user_value > MAX_ID_TYPE)) then begin
       log_error.record_error(filename, ord(id_type));
@@ -188,12 +189,12 @@ begin
   end;
 end;
 
-procedure Analyzer_for_TS_files.analyze_nomenclature();
+procedure TSAnalyzer.analyze_nomenclature();
 var
   index_row : Integer;
   user_input : String;
 begin
-  for index_row := ID_FIRST_ROW_WITH_DATA to last_row do begin
+  for index_row := FIRST_LINE_OF_DATA to last_row do begin
     user_input := String(excel.Cells[index_row, ord(id_nomenclature)]);
     if (user_input = '') then Continue;
     if (user_input = 'BF_INST_AGENT_NOTCAL') or (user_input = 'BF_ACC_ACTION_BAG') or
@@ -204,49 +205,50 @@ begin
   end;
 end;
 
-procedure Analyzer_for_TS_files.analyze_values();
+procedure TSAnalyzer.analyze_values();
 var
-  index_row, index_incorrect_row : Integer;
+  index_row : Integer;
   min_value_of_user, max_value_of_user, default_value_of_user : Double;
 begin
-  index_incorrect_row := -1;
-
-  for index_row := ID_FIRST_ROW_WITH_DATA to last_row do begin
-    if not (TryStrToFloat(excel.Cells[index_row, ord(id_min_value)], min_value_of_user)) then
-      index_incorrect_row := ord(id_min_value)
-    else if not (TryStrToFloat(excel.Cells[index_row, ord(id_max_value)], max_value_of_user)) then
-      index_incorrect_row := ord(id_max_value)
-    else if not (TryStrToFloat(excel.Cells[index_row, ord(id_default_value)], default_value_of_user)) then
-      index_incorrect_row := ord(id_default_value);
-
-    if (min_value_of_user <> max_value_of_user) or (max_value_of_user <> default_value_of_user) then begin
-      if (min_value_of_user = max_value_of_user) then index_incorrect_row := ord(id_default_value)
-      else if (max_value_of_user = default_value_of_user) then index_incorrect_row := ord(id_min_value)
-      else index_incorrect_row := ord(id_max_value);
+  for index_row := FIRST_LINE_OF_DATA to last_row do begin
+    if not (TryStrToFloat(excel.Cells[index_row, ord(id_min_value)], min_value_of_user)) then begin
+      log_error.record_error(filename, ord(id_min_value));
+      Break;
     end;
 
-    if (index_incorrect_row <> -1) then begin
-      log_error.record_error(filename, index_incorrect_row);
+    if not (TryStrToFloat(excel.Cells[index_row, ord(id_max_value)], max_value_of_user)) then begin
+      log_error.record_error(filename, ord(id_max_value));
+      Break;
+    end;
+
+    if not (TryStrToFloat(excel.Cells[index_row, ord(id_default_value)], default_value_of_user)) then begin
+      log_error.record_error(filename, ord(id_default_value));
+      Break;
+    end;
+
+    if (min_value_of_user <> max_value_of_user) or (max_value_of_user <> default_value_of_user) then begin
+      if (min_value_of_user = max_value_of_user) then log_error.record_error(filename, ord(id_default_value))
+      else if (max_value_of_user = default_value_of_user) then log_error.record_error(filename, ord(id_min_value))
+      else log_error.record_error(filename, ord(id_max_value));
       Break;
     end;
   end;
 end;
 
-procedure Analyzer_for_TS_files.analyze_activation();
-const ACTIVATION_SIGN = 1;
+procedure TSAnalyzer.analyze_activation();
+const ACTIVATION_SIGN = '1';
 var
-  index_row, user_value : Integer;
+  index_row : Integer;
 begin
-  for index_row := ID_FIRST_ROW_WITH_DATA to last_row do begin
-    if not (TryStrToInt(String(excel.Cells[index_row, ord(id_activation)]), user_value)) or
-       (user_value <> ACTIVATION_SIGN) then begin
+  for index_row := FIRST_LINE_OF_DATA to last_row do begin
+    if (String(excel.Cells[index_row, ord(id_activation)]) <> ACTIVATION_SIGN) then begin
       log_error.record_error(filename, ord(id_activation));
       Break;
     end;
   end;
 end;
 
-procedure Analyzer_for_TS_files.analyze_numbering_shops();
+procedure TSAnalyzer.analyze_numbering_shops();
 var
   index_row : Integer;
   user_input : String;
@@ -255,9 +257,9 @@ begin
   reg_expr_one_shop := TRegExpr.Create();
   reg_expr_multi_shops := TRegExpr.Create();
 
-  for index_row := ID_FIRST_ROW_WITH_DATA to last_row do begin
+  for index_row := FIRST_LINE_OF_DATA to last_row do begin
     user_input := String(excel.Cells[index_row, id_number_shop]);
-    if not (user_input = '') then begin
+    if (user_input <> '') then begin
       reg_expr_one_shop.InputString := user_input;
       reg_expr_multi_shops.InputString := user_input + ',';
 
