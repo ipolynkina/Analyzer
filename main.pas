@@ -32,17 +32,13 @@ type
     decorator: TMenuItem;
     exit: TMenuItem;
 
+    procedure FormCreate(Sender: TObject);
     procedure btn_add_filesClick(Sender: TObject);
     procedure btn_run_analyzeClick(Sender: TObject);
-    procedure FormCreate(Sender: TObject);
-    procedure FormDestroy(Sender: TObject);
-    procedure exitClick(Sender: TObject);
     procedure get_infoClick(Sender: TObject);
+    procedure exitClick(Sender: TObject);
+    procedure FormDestroy(Sender: TObject);
 
-  //private
-    { Private declarations }
-  //public
-    { Public declarations }
   end;
 
 var
@@ -56,9 +52,14 @@ uses info;
 
 procedure TFormMain.FormCreate(Sender: TObject);
 begin
-  Application.HintHidePause := 5000;
   FormMain.il_pictures.GetBitmap(0, img_smile.Picture.Bitmap);
   mmo_error_text.Text := 'Hello!';
+  Application.HintHidePause := 5000;
+
+  dlg_add_files := TOpenDialog.Create(Self);
+  dlg_add_files.Options := [ofAllowMultiSelect];
+  dlg_add_files.Filter := 'Excel|*.xls';
+
   btn_run_analyze.Enabled := False;
 end;
 
@@ -68,10 +69,6 @@ var
 begin
   mmo_list_files.Text := '';
   mmo_error_text.Text := '';
-
-  dlg_add_files := TOpenDialog.Create(Self);
-  dlg_add_files.Options := [ofAllowMultiSelect];
-  dlg_add_files.Filter := 'Excel|*.xls';
 
   if dlg_add_files.Execute then begin
     for index := 0 to dlg_add_files.Files.Count - 1 do begin

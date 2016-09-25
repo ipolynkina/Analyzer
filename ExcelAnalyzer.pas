@@ -264,7 +264,7 @@ begin
       reg_expr_multi_shops.InputString := user_input + ',';
 
       reg_expr_one_shop.Expression := '^([A-B]{1}[0-9]{3})$';
-      reg_expr_multi_shops.Expression := '^('#39'{1}[A-B]{1}[0-9]{3}'#039'{1}[,]{1}){1,}$';
+      reg_expr_multi_shops.Expression := '^('#39'{1}[A-B]{1}[0-9]{3}'#39'{1}[,]{1}){1,}$';
 
       if not (reg_expr_one_shop.Exec()) and not (reg_expr_multi_shops.Exec()) then begin
         log_error.record_error(filename, ord(id_number_shop));

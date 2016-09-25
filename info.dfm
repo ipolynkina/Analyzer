@@ -62,7 +62,7 @@ object FormInfo: TFormInfo
     Top = 208
     Width = 170
     Height = 36
-    Caption = #1044#1072#1090#1072' '#1088#1077#1083#1080#1079#1072': 16.09.2016'#13#10
+    Caption = #1044#1072#1090#1072' '#1088#1077#1083#1080#1079#1072': 25.09.2016'#13#10
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clBlack
     Font.Height = -15
