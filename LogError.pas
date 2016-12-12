@@ -41,6 +41,8 @@ begin;
     7, 8, 9: curr_error := ': different values ';
     10: curr_error := ': values are not activated ';
     11: curr_error := ': incorrect number shop ';
+    12: curr_error := ': incorrect subsidiary ';
+    13: curr_error := ': incorrect business_line ';
     else curr_error := ': incorrect file structure ';
   end;
 

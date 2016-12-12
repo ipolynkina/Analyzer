@@ -1,8 +1,8 @@
 object FormMain: TFormMain
-  Left = 300
-  Top = 134
-  Width = 900
-  Height = 574
+  Left = -8
+  Top = -8
+  Width = 1382
+  Height = 744
   Align = alCustom
   Caption = 'Analyzer'
   Color = clBtnFace
@@ -21,15 +21,15 @@ object FormMain: TFormMain
   TextHeight = 13
   object pnl_bottom: TPanel
     Left = 0
-    Top = 502
-    Width = 884
+    Top = 672
+    Width = 1366
     Height = 33
     Align = alBottom
     TabOrder = 0
     object g_progress_analyze: TGauge
       Left = 1
       Top = 1
-      Width = 882
+      Width = 1364
       Height = 31
       Align = alClient
       ForeColor = clSkyBlue
@@ -43,10 +43,10 @@ object FormMain: TFormMain
     end
   end
   object pnl_right: TPanel
-    Left = 446
+    Left = 928
     Top = 0
     Width = 438
-    Height = 502
+    Height = 672
     Align = alRight
     Anchors = [akLeft, akTop, akBottom]
     TabOrder = 1
@@ -71,7 +71,7 @@ object FormMain: TFormMain
       Left = 1
       Top = 153
       Width = 436
-      Height = 348
+      Height = 518
       Align = alClient
       Font.Charset = RUSSIAN_CHARSET
       Font.Color = clBlue
@@ -87,15 +87,15 @@ object FormMain: TFormMain
   object pnl_left: TPanel
     Left = 0
     Top = 0
-    Width = 446
-    Height = 502
+    Width = 928
+    Height = 672
     Align = alClient
     Anchors = [akTop, akBottom]
     TabOrder = 2
     object pnl_top_left: TPanel
       Left = 1
       Top = 1
-      Width = 444
+      Width = 926
       Height = 64
       Align = alTop
       BevelInner = bvLowered
@@ -123,8 +123,8 @@ object FormMain: TFormMain
     object mmo_list_files: TMemo
       Left = 1
       Top = 65
-      Width = 444
-      Height = 436
+      Width = 926
+      Height = 606
       Align = alClient
       Font.Charset = RUSSIAN_CHARSET
       Font.Color = clBlue

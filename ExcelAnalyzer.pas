@@ -1,4 +1,4 @@
-unit ExcelAnalyzer;    
+unit ExcelAnalyzer;
 
 interface
 
@@ -7,7 +7,8 @@ uses ComObj, LogError, SysUtils, DateUtils, RegExpr;
 const FIRST_LINE_OF_DATA = 2;
 
 type file_structure = (id_date = 1, id_koeff, id_parameter_1, id_parameter_2, id_type, id_nomenclature,
-                       id_min_value, id_max_value, id_default_value, id_activation, id_number_shop);
+                       id_min_value, id_max_value, id_default_value, id_activation, id_number_shop,
+                       id_subsidiary, id_business_line);
 
 type
   TSAnalyzer = class
@@ -29,6 +30,8 @@ type
       procedure analyze_values();
       procedure analyze_activation();
       procedure analyze_numbering_shops();
+      procedure analyze_subsidiary();
+      procedure analyze_business_line();
 
     public
       constructor Create();
@@ -63,6 +66,8 @@ begin
     analyze_values();
     analyze_activation();
     analyze_numbering_shops();
+    analyze_subsidiary();
+    analyze_business_line();
   end;
 end;
 
@@ -275,6 +280,32 @@ begin
 
   reg_expr_one_shop.Free();
   reg_expr_multi_shops.Free();
+end;
+
+procedure TSAnalyzer.analyze_subsidiary();
+var
+  index_row : Integer;
+begin
+  for index_row := FIRST_LINE_OF_DATA to last_row do begin
+    if (String(excel.Cells[index_row, ord(id_subsidiary)]) <> '') then begin
+      log_error.record_error(filename, ord(id_subsidiary));
+      Break;
+    end;
+  end;
+end;
+
+procedure TSAnalyzer.analyze_business_line();
+var
+  index_row : Integer;
+  user_input : String;
+begin
+  for index_row := FIRST_LINE_OF_DATA to last_row do begin
+    user_input := String(excel.Cells[index_row, ord(id_business_line)]);
+    if (user_input <> '') and (user_input <> 'PVZ') and (user_input <> 'PZVS') then begin
+      log_error.record_error(filename, ord(id_business_line));
+      Break;
+    end;
+  end;
 end;
 
 end.
