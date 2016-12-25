@@ -113,13 +113,12 @@ end;
 procedure TSAnalyzer.analyze_date();
 const MAX_DAY_IN_MONTH = 31;
 var
-  index_row, days_in_year_today : Integer;
+  index_row: Integer;
   user_date : TDateTime;
 begin
-  days_in_year_today := DayOfTheYear(Now);
   for index_row := FIRST_LINE_OF_DATA to last_row do begin
     if not (TryStrToDate(String(excel.Cells[index_row, ord(id_date)]), user_date)) or
-           (Abs(days_in_year_today - DayOfTheYear(user_date)) > MAX_DAY_IN_MONTH) then begin
+           (Abs(DaysBetween(user_date, Now())) > MAX_DAY_IN_MONTH) then begin
       log_error.record_error(filename, ord(id_date));
       Break;
     end;
