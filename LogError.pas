@@ -43,7 +43,6 @@ begin;
     11: curr_error := ': incorrect number shop ';
     12: curr_error := ': incorrect subsidiary ';
     13: curr_error := ': incorrect business_line ';
-    14: curr_error := ': incorrect data';
     else curr_error := ': incorrect file structure ';
   end;
 
