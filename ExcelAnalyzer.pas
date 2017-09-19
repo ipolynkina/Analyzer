@@ -32,6 +32,7 @@ type
       procedure analyze_numbering_shops();
       procedure analyze_subsidiary();
       procedure analyze_business_line();
+      procedure smart_check(filename : String);
 
     public
       constructor Create();
@@ -68,6 +69,7 @@ begin
     analyze_numbering_shops();
     analyze_subsidiary();
     analyze_business_line();
+    smart_check(filename);
   end;
 end;
 
@@ -143,13 +145,18 @@ end;
 
 procedure TSAnalyzer.analyze_parameter_1();
 var
-  index_row, user_parameter : Integer;
+  index_row: Integer;
   user_input : String;
+  reg_expr : TRegExpr;
 begin
+  reg_expr := TRegExpr.Create();
+  
   for index_row := FIRST_LINE_OF_DATA to last_row do begin
     user_input := String(excel.Cells[index_row, ord(id_parameter_1)]);
     if (user_input = '') then Continue;
-    if not (TryStrToInt(user_input, user_parameter)) then begin
+    reg_expr.InputString := user_input;
+    reg_expr.Expression := '[0-9/]';
+    if not (reg_expr.Exec()) then begin
       log_error.record_error(filename, ord(id_parameter_1));
       Break;
     end;
@@ -303,6 +310,26 @@ begin
     if (user_input <> '') and (user_input <> 'PVZ') and (user_input <> 'PZVS') then begin
       log_error.record_error(filename, ord(id_business_line));
       Break;
+    end;
+  end;
+end;
+
+procedure TSAnalyzer.smart_check(filename : String);
+var
+  kpi_name : String;
+  reg_expr : TRegExpr;
+begin
+  kpi_name := '';
+  reg_expr := TRegExpr.Create();
+  reg_expr.InputString := filename;
+  reg_expr.Expression := '[KPI]+(\s)+(\d{1,2})';
+  if (reg_expr.Exec()) then begin
+    repeat
+      kpi_name := kpi_name + reg_expr.Match[0];
+    until not reg_expr.ExecNext;
+    kpi_name := StringReplace(kpi_name, ' ', '', [rfReplaceAll]);
+    if (kpi_name <> String(excel.Cells[FIRST_LINE_OF_DATA, ord(id_koeff)])) then begin
+      log_error.record_error(filename, ord(id_koeff));
     end;
   end;
 end;
