@@ -329,7 +329,7 @@ begin
     until not reg_expr.ExecNext;
     kpi_name := StringReplace(kpi_name, ' ', '', [rfReplaceAll]);
     if (kpi_name <> String(excel.Cells[FIRST_LINE_OF_DATA, ord(id_koeff)])) then begin
-      log_error.record_error(filename, ord(id_koeff));
+      log_error.record_error(filename, 0);
     end;
   end;
 end;

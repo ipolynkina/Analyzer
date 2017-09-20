@@ -30,9 +30,11 @@ end;
 procedure Logger.record_error(filename: String; id_column: Integer);
 var
   curr_error: String;
+  real_id_column : Integer;
 begin;
   case id_column of
-    1: curr_error := ': incorrect data ';
+    0: curr_error := ': incorrect data in the file ';
+    1: curr_error := ': incorrect date ';
     2: curr_error := ': coefficients have different names ';
     3: curr_error := ': incorrect parameter 1 ';
     4: curr_error := ': incorrect parameter 2 ';
@@ -46,7 +48,12 @@ begin;
     else curr_error := ': incorrect file structure ';
   end;
 
-  error_text := error_text + filename + curr_error + '(see column ' + IntToStr(id_column) + ')' + #13#10;
+  real_id_column := id_column;
+  if(id_column = 0) then begin
+    real_id_column := 2;
+  end;
+
+  error_text := error_text + filename + curr_error + '(see column ' + IntToStr(real_id_column) + ')' + #13#10;
   file_is_correct := False;
 end;
 
